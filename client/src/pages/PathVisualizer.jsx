@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { CheckCircle, Circle, Lock, ArrowRight, BookOpen } from 'lucide-react';
+import API_BASE_URL from '../utils/api';
 
 const PathNode = ({ title, status, x, y, onClick, isSelected }) => {
     const isLocked = status === 'locked';
@@ -63,7 +64,7 @@ const PathVisualizer = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch('http://localhost:5000/api/paths')
+        fetch(`${API_BASE_URL}/api/paths`)
             .then(res => res.json())
             .then(data => {
                 setPaths(data);

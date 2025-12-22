@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, BookOpen, MessageSquare, AlertCircle, TrendingUp, Mail, LogOut } from 'lucide-react';
+import API_BASE_URL from '../../utils/api';
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
@@ -29,19 +30,19 @@ const AdminDashboard = () => {
     const fetchData = async () => {
         try {
             // Fetch stats
-            const statsRes = await fetch('http://localhost:5000/api/admin/stats', {
+            const statsRes = await fetch(`${API_BASE_URL}/api/admin/stats`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (statsRes.ok) setStats(await statsRes.json());
 
             // Fetch users
-            const usersRes = await fetch('http://localhost:5000/api/admin/users', {
+            const usersRes = await fetch(`${API_BASE_URL}/api/admin/users`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (usersRes.ok) setUsers(await usersRes.json());
 
             // Fetch queries
-            const queriesRes = await fetch('http://localhost:5000/api/queries/all', {
+            const queriesRes = await fetch(`${API_BASE_URL}/api/queries/all`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (queriesRes.ok) setQueries(await queriesRes.json());
@@ -59,7 +60,7 @@ const AdminDashboard = () => {
         }
 
         try {
-            const res = await fetch(`http://localhost:5000/api/queries/${queryId}/reply`, {
+            const res = await fetch(`${API_BASE_URL}/api/queries/${queryId}/reply`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

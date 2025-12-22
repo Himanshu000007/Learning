@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Send, MessageSquare, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import API_BASE_URL from '../utils/api';
 
 const Feedback = () => {
     const [queries, setQueries] = useState([]);
@@ -21,7 +22,7 @@ const Feedback = () => {
 
     const fetchQueries = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/queries/my', {
+            const res = await fetch(`${API_BASE_URL}/api/queries/my`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (res.ok) setQueries(await res.json());
@@ -40,7 +41,7 @@ const Feedback = () => {
         }
         setSubmitting(true);
         try {
-            const res = await fetch('http://localhost:5000/api/queries', {
+            const res = await fetch(`${API_BASE_URL}/api/queries`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

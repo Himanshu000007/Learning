@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Clock, Users, Star, Search, Filter } from 'lucide-react';
+import API_BASE_URL from '../../utils/api';
 
 const CourseList = () => {
     const [courses, setCourses] = useState([]);
@@ -16,7 +17,7 @@ const CourseList = () => {
 
     const fetchCourses = async () => {
         try {
-            let url = 'http://localhost:5000/api/courses';
+            let url = `${API_BASE_URL}/api/courses`;
             const params = new URLSearchParams();
             if (category && category !== 'All') params.append('category', category);
             if (search) params.append('search', search);

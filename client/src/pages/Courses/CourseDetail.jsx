@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Clock, Users, Star, Play, CheckCircle, BookOpen } from 'lucide-react';
+import API_BASE_URL from '../../utils/api';
 
 const CourseDetail = () => {
     const { id } = useParams();
@@ -14,7 +15,7 @@ const CourseDetail = () => {
 
     const fetchCourse = async () => {
         try {
-            const response = await fetch(`http://localhost:5000/api/courses/${id}`);
+            const response = await fetch(`${API_BASE_URL}/api/courses/${id}`);
             const data = await response.json();
             setCourse(data);
         } catch (error) {
