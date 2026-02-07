@@ -65,7 +65,7 @@ const Sidebar = () => {
               padding: '1rem',
               borderRadius: 'var(--radius-sm)',
               color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
-              background: isActive ? 'rgba(99, 102, 241, 0.1)' : 'transparent',
+              background: isActive ? 'rgba(34, 197, 94, 0.1)' : 'transparent',
               borderLeft: isActive ? '3px solid var(--accent-primary)' : '3px solid transparent',
               transition: 'all 0.2s ease',
               textDecoration: 'none',
@@ -90,7 +90,7 @@ const Sidebar = () => {
               gap: '1rem',
               padding: '1rem',
               borderRadius: 'var(--radius-sm)',
-              color: isActive ? '#f59e0b' : '#f59e0b',
+              color: '#f59e0b',
               background: isActive ? 'rgba(245, 158, 11, 0.1)' : 'transparent',
               borderLeft: isActive ? '3px solid #f59e0b' : '3px solid transparent',
               transition: 'all 0.2s ease',
@@ -103,94 +103,43 @@ const Sidebar = () => {
           </NavLink>
         )}
 
-        {/* Auth Links */}
-        <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          {!user ? (
-            <>
-              <NavLink
-                to="/login"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '1rem',
-                  padding: '1rem',
-                  borderRadius: 'var(--radius-sm)',
-                  color: 'var(--text-secondary)',
-                  textDecoration: 'none',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                <LogIn size={20} />
-                Login
-              </NavLink>
-              <NavLink
-                to="/register"
-                className="btn btn-primary"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.5rem',
-                  padding: '0.75rem',
-                  textDecoration: 'none'
-                }}
-              >
-                <UserPlus size={18} />
-                Sign Up
-              </NavLink>
-            </>
-          ) : (
-            <button
-              onClick={handleLogout}
+        {/* Auth Links - Login/Signup only */}
+        {!user && (
+          <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <NavLink
+              to="/login"
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '1rem',
                 padding: '1rem',
                 borderRadius: 'var(--radius-sm)',
-                color: '#ef4444',
-                background: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                fontSize: '1rem',
+                color: 'var(--text-secondary)',
+                textDecoration: 'none',
                 transition: 'all 0.2s ease'
               }}
             >
-              <LogOut size={20} />
-              Logout
-            </button>
-          )}
-        </div>
+              <LogIn size={20} />
+              Login
+            </NavLink>
+            <NavLink
+              to="/register"
+              className="btn btn-primary"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                padding: '0.75rem',
+                textDecoration: 'none'
+              }}
+            >
+              <UserPlus size={18} />
+              Sign Up
+            </NavLink>
+          </div>
+        )}
       </nav>
-
-      {/* User Profile */}
-      {user && (
-        <div className="user-profile" style={{
-          marginTop: '1rem',
-          padding: '1rem',
-          borderTop: '1px solid var(--border-color)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.75rem'
-        }}>
-          <div style={{
-            width: '40px',
-            height: '40px',
-            borderRadius: '50%',
-            background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 'bold'
-          }}>
-            {user.name?.charAt(0).toUpperCase() || 'U'}
-          </div>
-          <div>
-            <div style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>{user.name}</div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{user.email}</div>
-          </div>
-        </div>
-      )}
     </aside>
   );
 };

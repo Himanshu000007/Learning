@@ -17,26 +17,39 @@ const courseSchema = new mongoose.Schema({
     category: {
         type: String,
         required: true,
-        enum: ['Web Development', 'Data Science', 'Machine Learning', 'Mobile Development', 'DevOps', 'Design']
+        enum: [
+            'Web Development', 'Frontend', 'Backend', 'Full Stack',
+            'Data Science', 'Machine Learning', 'Artificial Intelligence',
+            'Mobile Development', 'DevOps', 'Cloud Computing',
+            'Design', 'UI/UX', 'Graphic Design',
+            'Computer Science', 'DSA', 'Operating Systems', 'DBMS', 'System Design', 'Networks',
+            'Cybersecurity', 'Blockchain', 'Other'
+        ]
     },
     difficulty: {
         type: String,
-        enum: ['Beginner', 'Intermediate', 'Advanced'],
+        enum: ['Beginner', 'Beginner to Intermediate', 'Intermediate', 'Advanced', 'All Levels'],
         default: 'Beginner'
     },
     duration: {
         type: String,
-        default: '2 hours'
+        default: '0 hours'
     },
     modules: [{
-        title: String,
-        videoUrl: String,
-        duration: String,
-        order: Number
+        title: { type: String, required: true },
+        lessons: [{
+            title: { type: String, required: true },
+            videoUrl: String, // For internal videos
+            youtubeUrl: String, // For YouTube embeds
+            duration: String,
+            content: String, // Text content
+            freePreview: { type: Boolean, default: false }
+        }]
     }],
     instructor: {
         name: String,
-        avatar: String
+        avatar: String,
+        bio: String
     },
     rating: {
         type: Number,

@@ -1,60 +1,137 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Play, Clock, Award, TrendingUp, Users, BookOpen, Zap, ArrowRight, Star } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Play, Clock, Award, TrendingUp, BookOpen, Zap, ArrowRight, Star, Users, Search, Filter, Flame } from 'lucide-react';
 import API_BASE_URL from '../utils/api';
 
 const Dashboard = () => {
+    const navigate = useNavigate();
     const [user, setUser] = useState(null);
     const [courses, setCourses] = useState([]);
-    const [paths, setPaths] = useState([]);
+    const [stats, setStats] = useState({
+        hoursLearned: '0',
+        coursesCompleted: 0,
+        coursesInProgress: 0,
+        currentStreak: 0,
+        skillScore: 0
+    });
+    const [loading, setLoading] = useState(true);
+    const [selectedCategory, setSelectedCategory] = useState('All');
+    const [searchQuery, setSearchQuery] = useState('');
+
+    const categories = ['All', 'Frontend', 'Backend', 'DSA', 'Computer Science', 'System Design', 'Design'];
 
     useEffect(() => {
-        // Load user from localStorage
         const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-            setUser(JSON.parse(storedUser));
+        const token = localStorage.getItem('token');
+
+        if (!storedUser || !token) {
+            navigate('/login');
+            return;
         }
+
+        setUser(JSON.parse(storedUser));
+
+        // Fetch user stats
+        fetch(`${API_BASE_URL}/api/progress/stats`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.hoursLearned !== undefined) {
+                    setStats(data);
+                }
+            })
+            .catch(console.error);
 
         // Fetch courses
         fetch(`${API_BASE_URL}/api/courses`)
             .then(res => res.json())
-            .then(data => setCourses(data.slice(0, 4)))
-            .catch(console.error);
+            .then(data => {
+                setCourses(data);
+                setLoading(false);
+            })
+            .catch(err => {
+                console.error(err);
+                setLoading(false);
+            });
+    }, [navigate]);
 
-        // Fetch learning paths
-        fetch(`${API_BASE_URL}/api/paths`)
-            .then(res => res.json())
-            .then(data => setPaths(data))
-            .catch(console.error);
-    }, []);
+    const filteredCourses = courses.filter(course => {
+        const matchesCategory = selectedCategory === 'All' || course.category === selectedCategory;
+        const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            course.description?.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesCategory && matchesSearch;
+    });
 
-    const stats = [
-        { label: 'Hours Learned', value: user?.progress?.hoursLearned || '42.5', icon: Clock, color: '#ec4899' },
-        { label: 'Courses Completed', value: user?.progress?.coursesCompleted || '12', icon: Award, color: '#f59e0b' },
-        { label: 'Current Streak', value: `${user?.progress?.currentStreak || 5} Days`, icon: TrendingUp, color: '#10b981' },
-        { label: 'Skill Score', value: user?.progress?.skillScore || '850', icon: Zap, color: '#6366f1' },
+    const statsCards = [
+        { label: 'Hours Learned', value: stats.hoursLearned || '0', icon: Clock, color: '#22c55e' },
+        { label: 'Courses Completed', value: stats.coursesCompleted || 0, icon: Award, color: '#f59e0b' },
+        { label: 'Day Streak', value: stats.currentStreak || 0, icon: Flame, color: '#ef4444' },
+        { label: 'Skill Score', value: stats.skillScore || 0, icon: Zap, color: '#22c55e' }
     ];
+
+    if (loading) {
+        return (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '80vh' }}>
+                <div style={{ textAlign: 'center' }}>
+                    <div className="spinner" style={{
+                        width: '50px',
+                        height: '50px',
+                        border: '3px solid var(--border-color)',
+                        borderTop: '3px solid var(--accent-primary)',
+                        borderRadius: '50%',
+                        animation: 'spin 1s linear infinite',
+                        margin: '0 auto 1rem'
+                    }} />
+                    <p style={{ color: 'var(--text-secondary)' }}>Loading your dashboard...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="dashboard-page" style={{ paddingBottom: '3rem' }}>
-            {/* Header Section */}
-            <header style={{ marginBottom: '2.5rem' }}>
-                <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-                    Welcome back, <span style={{ color: 'var(--accent-primary)' }}>{user?.name || 'Learner'}</span>
-                </h1>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem' }}>
-                    You're making great progress! Here's what's happening with your learning journey.
-                </p>
+            {/* Hero Section */}
+            <header style={{
+                background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(22, 163, 74, 0.05) 100%)',
+                borderRadius: 'var(--radius-lg)',
+                padding: '2rem',
+                marginBottom: '2rem',
+                border: '1px solid rgba(34, 197, 94, 0.2)'
+            }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                        <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+                            Welcome back, <span style={{ color: 'var(--accent-primary)' }}>{user?.name || 'Learner'}</span>! 👋
+                        </h1>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem' }}>
+                            {stats.currentStreak > 0
+                                ? `🔥 You're on a ${stats.currentStreak} day streak! Keep it going!`
+                                : 'Start learning today and build your streak!'}
+                        </p>
+                    </div>
+                    <Link to="/courses" className="btn btn-primary" style={{ padding: '1rem 2rem', fontSize: '1rem' }}>
+                        Continue Learning <ArrowRight size={18} style={{ marginLeft: '0.5rem' }} />
+                    </Link>
+                </div>
             </header>
 
             {/* Stats Grid */}
-            <div className="grid" style={{
-                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                gap: '1.5rem',
-                marginBottom: '3rem'
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 1fr)',
+                gap: '1rem',
+                marginBottom: '2.5rem'
             }}>
-                {stats.map((stat, index) => (
-                    <div key={index} className="card glass" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                {statsCards.map((stat, index) => (
+                    <div key={index} className="card" style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '1rem',
+                        padding: '1.25rem',
+                        background: `linear-gradient(135deg, ${stat.color}10, transparent)`,
+                        borderColor: `${stat.color}30`
+                    }}>
                         <div style={{
                             width: '50px',
                             height: '50px',
@@ -68,170 +145,124 @@ const Dashboard = () => {
                             <stat.icon size={24} />
                         </div>
                         <div>
-                            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', lineHeight: 1 }}>{stat.value}</div>
-                            <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>{stat.label}</div>
+                            <div style={{ fontSize: '1.75rem', fontWeight: 'bold', lineHeight: 1, color: stat.color }}>
+                                {stat.value}
+                            </div>
+                            <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '4px' }}>
+                                {stat.label}
+                            </div>
                         </div>
                     </div>
                 ))}
             </div>
 
-            {/* Main Content Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem', marginBottom: '3rem' }}>
-                {/* Continue Learning Section */}
-                <section>
-                    <div className="flex justify-between items-center" style={{ marginBottom: '1.5rem' }}>
-                        <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>Continue Learning</h2>
-                        <Link to="/courses" className="btn" style={{ color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            View All <ArrowRight size={16} />
-                        </Link>
-                    </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                        {courses.slice(0, 3).map((course, i) => (
-                            <Link key={course._id} to={`/courses/${course._id}`} style={{ textDecoration: 'none' }}>
-                                <div className="card" style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '1.5rem',
-                                    padding: '1rem'
-                                }}>
-                                    <img
-                                        src={course.thumbnail}
-                                        alt={course.title}
-                                        style={{ width: '120px', height: '80px', objectFit: 'cover', borderRadius: '8px' }}
-                                    />
-                                    <div style={{ flex: 1 }}>
-                                        <div style={{ fontSize: '0.75rem', color: 'var(--accent-secondary)', marginBottom: '0.25rem' }}>
-                                            {course.category}
-                                        </div>
-                                        <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
-                                            {course.title}
-                                        </h3>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                                <Clock size={14} /> {course.duration}
-                                            </span>
-                                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                                <BookOpen size={14} /> {course.modules?.length || 0} modules
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div style={{
-                                        width: '60px',
-                                        height: '60px',
-                                        borderRadius: '50%',
-                                        background: 'var(--accent-primary)',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center'
-                                    }}>
-                                        <Play size={24} fill="white" color="white" />
-                                    </div>
-                                </div>
-                            </Link>
-                        ))}
-                    </div>
-                </section>
-
-                {/* Right Sidebar */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                    {/* Learning Paths */}
-                    <section>
-                        <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem' }}>Your Learning Paths</h3>
-                        {paths.length > 0 ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                {paths.map(path => (
-                                    <Link key={path._id} to="/paths" style={{ textDecoration: 'none' }}>
-                                        <div className="card" style={{ padding: '1rem' }}>
-                                            <h4 style={{ fontWeight: 600, marginBottom: '0.5rem', color: 'var(--text-primary)' }}>{path.title}</h4>
-                                            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
-                                                {path.nodes?.length || 0} steps • {path.estimatedDuration}
-                                            </p>
-                                            <div style={{
-                                                height: '4px',
-                                                background: 'var(--bg-primary)',
-                                                borderRadius: '2px',
-                                                overflow: 'hidden'
-                                            }}>
-                                                <div style={{
-                                                    width: `${((path.nodes?.filter(n => n.status === 'completed').length || 0) / (path.nodes?.length || 1)) * 100}%`,
-                                                    height: '100%',
-                                                    background: 'var(--accent-primary)',
-                                                    borderRadius: '2px'
-                                                }} />
-                                            </div>
-                                        </div>
-                                    </Link>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="card" style={{ textAlign: 'center', padding: '2rem' }}>
-                                <p style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>No paths yet</p>
-                                <Link to="/recommendations" className="btn btn-primary">Find Your Path</Link>
-                            </div>
-                        )}
-                    </section>
-
-                    {/* Quick Actions */}
-                    <section>
-                        <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem' }}>Quick Actions</h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                            <Link to="/recommendations" className="card" style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '1rem',
-                                padding: '1rem',
-                                textDecoration: 'none',
-                                color: 'var(--text-primary)'
-                            }}>
-                                <Zap size={20} color="var(--accent-primary)" />
-                                <span>Get Personalized Recommendations</span>
-                            </Link>
-                            <Link to="/courses" className="card" style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '1rem',
-                                padding: '1rem',
-                                textDecoration: 'none',
-                                color: 'var(--text-primary)'
-                            }}>
-                                <BookOpen size={20} color="var(--accent-secondary)" />
-                                <span>Browse All Courses</span>
-                            </Link>
-                            <Link to="/paths" className="card" style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '1rem',
-                                padding: '1rem',
-                                textDecoration: 'none',
-                                color: 'var(--text-primary)'
-                            }}>
-                                <TrendingUp size={20} color="#10b981" />
-                                <span>View Learning Path</span>
-                            </Link>
-                        </div>
-                    </section>
+            {/* Search & Filter Bar */}
+            <div style={{
+                display: 'flex',
+                gap: '1rem',
+                marginBottom: '2rem',
+                alignItems: 'center'
+            }}>
+                <div style={{
+                    flex: 1,
+                    position: 'relative'
+                }}>
+                    <Search size={20} style={{
+                        position: 'absolute',
+                        left: '1rem',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        color: 'var(--text-muted)'
+                    }} />
+                    <input
+                        type="text"
+                        placeholder="Search courses..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        style={{
+                            width: '100%',
+                            padding: '0.875rem 1rem 0.875rem 3rem',
+                            background: 'var(--bg-card)',
+                            border: '1px solid var(--border-color)',
+                            borderRadius: 'var(--radius-md)',
+                            color: 'var(--text-primary)',
+                            fontSize: '1rem'
+                        }}
+                    />
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    {categories.map(cat => (
+                        <button
+                            key={cat}
+                            onClick={() => setSelectedCategory(cat)}
+                            style={{
+                                padding: '0.75rem 1.25rem',
+                                borderRadius: 'var(--radius-sm)',
+                                border: 'none',
+                                background: selectedCategory === cat
+                                    ? 'var(--accent-primary)'
+                                    : 'var(--bg-card)',
+                                color: selectedCategory === cat
+                                    ? 'white'
+                                    : 'var(--text-secondary)',
+                                cursor: 'pointer',
+                                fontSize: '0.875rem',
+                                fontWeight: '500',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            {cat}
+                        </button>
+                    ))}
                 </div>
             </div>
 
-            {/* Featured Courses Section */}
+            {/* Course Grid */}
             <section>
-                <div className="flex justify-between items-center" style={{ marginBottom: '1.5rem' }}>
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>Featured Courses</h2>
-                    <Link to="/courses" className="btn" style={{ color: 'var(--accent-primary)' }}>See All</Link>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                    <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
+                        {selectedCategory === 'All' ? 'All Courses' : selectedCategory}
+                        <span style={{ color: 'var(--text-muted)', fontWeight: 'normal', fontSize: '1rem', marginLeft: '0.5rem' }}>
+                            ({filteredCourses.length} courses)
+                        </span>
+                    </h2>
                 </div>
 
-                <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
-                    {courses.map(course => (
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                    gap: '1.5rem'
+                }}>
+                    {filteredCourses.map(course => (
                         <Link key={course._id} to={`/courses/${course._id}`} style={{ textDecoration: 'none' }}>
-                            <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+                            <div className="card" style={{ padding: 0, overflow: 'hidden', height: '100%' }}>
                                 <div style={{ height: '160px', overflow: 'hidden', position: 'relative' }}>
-                                    <img src={course.thumbnail} alt={course.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    <img
+                                        src={course.thumbnail}
+                                        alt={course.title}
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                        onError={(e) => {
+                                            e.target.src = 'https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=400';
+                                        }}
+                                    />
+                                    <div style={{
+                                        position: 'absolute',
+                                        top: '0.75rem',
+                                        left: '0.75rem',
+                                        background: 'var(--accent-primary)',
+                                        padding: '0.25rem 0.75rem',
+                                        borderRadius: '4px',
+                                        fontSize: '0.7rem',
+                                        fontWeight: '600',
+                                        textTransform: 'uppercase'
+                                    }}>
+                                        {course.category}
+                                    </div>
                                     <div style={{
                                         position: 'absolute',
                                         top: '0.75rem',
                                         right: '0.75rem',
-                                        background: 'rgba(0,0,0,0.7)',
+                                        background: 'rgba(0,0,0,0.8)',
                                         padding: '0.25rem 0.75rem',
                                         borderRadius: '4px',
                                         fontSize: '0.75rem',
@@ -243,45 +274,68 @@ const Dashboard = () => {
                                     </div>
                                 </div>
                                 <div style={{ padding: '1.25rem' }}>
-                                    <div style={{ fontSize: '0.7rem', color: 'var(--accent-secondary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
-                                        {course.category}
-                                    </div>
-                                    <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
+                                    <h3 style={{
+                                        fontSize: '1.1rem',
+                                        fontWeight: 'bold',
+                                        marginBottom: '0.5rem',
+                                        color: 'var(--text-primary)',
+                                        lineHeight: 1.3
+                                    }}>
                                         {course.title}
                                     </h3>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-                                        <span><Clock size={12} /> {course.duration}</span>
-                                        <span><Users size={12} /> {course.enrolledCount?.toLocaleString()}</span>
+                                    <p style={{
+                                        fontSize: '0.85rem',
+                                        color: 'var(--text-muted)',
+                                        marginBottom: '1rem',
+                                        display: '-webkit-box',
+                                        WebkitLineClamp: 2,
+                                        WebkitBoxOrient: 'vertical',
+                                        overflow: 'hidden'
+                                    }}>
+                                        {course.description}
+                                    </p>
+                                    <div style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '1rem',
+                                        color: 'var(--text-muted)',
+                                        fontSize: '0.8rem',
+                                        borderTop: '1px solid var(--border-color)',
+                                        paddingTop: '1rem'
+                                    }}>
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                            <Clock size={14} /> {course.duration}
+                                        </span>
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                            <BookOpen size={14} /> {course.modules?.length || 0} modules
+                                        </span>
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                            <Users size={14} /> {course.enrolledCount?.toLocaleString()}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
                         </Link>
                     ))}
                 </div>
+
+                {filteredCourses.length === 0 && (
+                    <div style={{
+                        textAlign: 'center',
+                        padding: '3rem',
+                        color: 'var(--text-muted)'
+                    }}>
+                        <BookOpen size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
+                        <p>No courses found matching your criteria.</p>
+                    </div>
+                )}
             </section>
 
-            {/* Community Activity */}
-            <section style={{ marginTop: '3rem' }}>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1.5rem' }}>Community Activity</h2>
-                <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
-                    {[
-                        { user: 'Sarah M.', action: 'completed', course: 'React Fundamentals', time: '2 hours ago', avatar: 'https://randomuser.me/api/portraits/women/44.jpg' },
-                        { user: 'John D.', action: 'started', course: 'Node.js Masterclass', time: '4 hours ago', avatar: 'https://randomuser.me/api/portraits/men/32.jpg' },
-                        { user: 'Emily C.', action: 'earned badge', course: 'Python Expert', time: '5 hours ago', avatar: 'https://randomuser.me/api/portraits/women/68.jpg' },
-                    ].map((activity, i) => (
-                        <div key={i} className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                            <img src={activity.avatar} alt={activity.user} style={{ width: '50px', height: '50px', borderRadius: '50%', objectFit: 'cover' }} />
-                            <div style={{ flex: 1 }}>
-                                <div style={{ fontWeight: 600 }}>{activity.user}</div>
-                                <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                                    {activity.action} <span style={{ color: 'var(--accent-primary)' }}>{activity.course}</span>
-                                </div>
-                            </div>
-                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{activity.time}</div>
-                        </div>
-                    ))}
-                </div>
-            </section>
+            <style>{`
+                @keyframes spin {
+                    to { transform: rotate(360deg); }
+                }
+            `}</style>
         </div>
     );
 };

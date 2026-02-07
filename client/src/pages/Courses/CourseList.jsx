@@ -9,7 +9,7 @@ const CourseList = () => {
     const [search, setSearch] = useState('');
     const [category, setCategory] = useState('');
 
-    const categories = ['All', 'Web Development', 'Data Science', 'Machine Learning', 'Mobile Development', 'DevOps', 'Design'];
+    const categories = ['All', 'Frontend', 'Backend', 'Full Stack', 'DSA', 'Computer Science', 'System Design', 'Design'];
 
     useEffect(() => {
         fetchCourses();

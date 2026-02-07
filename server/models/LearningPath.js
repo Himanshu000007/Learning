@@ -12,14 +12,23 @@ const learningPathSchema = new mongoose.Schema({
     thumbnail: String,
     nodes: [{
         title: String,
-        status: {
+        type: {
             type: String,
-            enum: ['completed', 'active', 'locked'],
-            default: 'locked'
+            enum: ['course', 'quiz'],
+            default: 'course'
         },
         courseId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Course'
+        },
+        quizId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Quiz'
+        },
+        status: { // Default status definition, overridden by user progress
+            type: String,
+            enum: ['completed', 'active', 'locked'],
+            default: 'locked'
         },
         position: {
             x: Number,

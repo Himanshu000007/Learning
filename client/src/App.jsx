@@ -1,6 +1,8 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import Sidebar from './components/Layout/Sidebar';
+import Navbar from './components/Layout/Navbar'; // Import Navbar
 import MickAI from './components/AI/MickAI';
 
 // Pages
@@ -28,22 +30,63 @@ const Settings = () => (
 
 const AppContent = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
   const isAuthPage = ['/login', '/register', '/admin/login'].includes(location.pathname);
   const isNoSidebarPage = isAuthPage || location.pathname === '/path-visualizer';
 
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    } else {
+      setUser(null);
+    }
+  }, [location.pathname]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+    navigate('/login');
+  };
+
   return (
     <div className="app-container" style={{ display: 'flex', minHeight: '100vh' }}>
-      {!isNoSidebarPage && <Sidebar />}
+      {!isNoSidebarPage && (
+        <div style={{
+          width: sidebarOpen ? '260px' : '0',
+          transition: 'width 0.3s ease',
+          overflow: 'hidden'
+        }}>
+          <Sidebar user={user} />
+        </div>
+      )}
+
       <main style={{
         flex: 1,
-        marginLeft: !isNoSidebarPage ? '260px' : '0',
-        padding: '2rem',
         backgroundColor: 'var(--bg-primary)',
         color: 'var(--text-primary)',
-        // Ensure content doesn't get hidden behind fixed sidebar if styled differently
-        transition: 'margin-left 0.3s ease'
+        minWidth: 0,
+        display: 'flex',
+        flexDirection: 'column'
       }}>
-        <div className="container" style={{ height: '100%' }}>
+        {!isNoSidebarPage && (
+          <Navbar
+            user={user}
+            onLogout={handleLogout}
+            toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+          />
+        )}
+
+        <div className="container" style={{
+          height: '100%',
+          padding: isNoSidebarPage ? '0' : '0 2rem',
+          maxWidth: '100%',
+          width: '100%'
+        }}>
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/paths" element={<PathVisualizer />} />
@@ -66,9 +109,11 @@ const AppContent = () => {
 
 function App() {
   return (
-    <Router>
-      <AppContent />
-    </Router>
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+      <Router>
+        <AppContent />
+      </Router>
+    </GoogleOAuthProvider>
   );
 }
 

@@ -10,6 +10,7 @@ const pathRoutes = require('./routes/paths');
 const queryRoutes = require('./routes/queries');
 const adminRoutes = require('./routes/admin');
 const aiRoutes = require('./routes/ai');
+const progressRoutes = require('./routes/progress');
 
 const app = express();
 
@@ -19,7 +20,7 @@ app.use(express.json());
 
 // For testing backendstatus
 app.get('/', (req, res) => {
-res.send('Backend is running 🚀');
+    res.send('Backend is running 🚀');
 });
 // Routes
 app.use('/api/auth', authRoutes);
@@ -29,6 +30,7 @@ app.use('/api/paths', pathRoutes);
 app.use('/api/queries', queryRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/progress', progressRoutes);
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI)
